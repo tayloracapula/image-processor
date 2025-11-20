@@ -1,0 +1,18 @@
+# Build artifacts
+build/
+*.o
+*.exe
+*.out
+
+# Debug files
+*.gdb
+*.dSYM/
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
