@@ -1,5 +1,5 @@
-#ifndef  IMAGE-PROCESSOR_H
-#define IMAGE-PROCESSOR_H
+#ifndef  IMAGE_PROCESSOR_H
+#define IMAGE_PROCESSOR_H
 
 //add function declarations here
 

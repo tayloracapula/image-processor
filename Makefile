@@ -1,4 +1,4 @@
-PROJECT_NAME := myproject
+PROJECT_NAME := image-processor
 
 SRCDIR := src
 BUILDDIR := build

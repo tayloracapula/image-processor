@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../include/bmp.h"
 
-int main() {
-    printf("Hello, %s\n","image-processor");
+int main(int argc, char **argv) {
+    printf("Hello, %s\n","yaaay");
     return 0;
 }
