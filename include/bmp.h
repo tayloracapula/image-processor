@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "image-processor.h"
 
 typedef struct {
     int width;
@@ -11,12 +12,11 @@ typedef struct {
     uint8_t *pixels;
 } bmp_image_t;
 
-int bmp_load(const char *path, bmp_image_t *out_img);
+int bmp_load(const char *path, image_t *out_img);
 
-int bmp_write(const char *path, const bmp_image_t *img);
+int bmp_write(const char *path, const image_t *img);
 
 void bmp_free(bmp_image_t *img);
 
-int bmp_invert(bmp_image_t *img);
 
 #endif

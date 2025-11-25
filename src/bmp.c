@@ -2,6 +2,7 @@
 #include <stdint.h>
 #define _POSIX_C_SOURCE 200112L
 
+#include "../include/image-processor.h"
 #include "../include/bmp.h"
 
 #include <stdio.h>
@@ -43,7 +44,7 @@ static size_t row_padded_bytes(int width, int bpp) {
     return rowbytes + pad;
 }
 
-int bmp_load(const char *path, bmp_image_t *out_img) {
+int bmp_load(const char *path, image_t *out_img) {
     if (!path || !out_img) return BMP_ERR;
     memset(out_img, 0, sizeof(*out_img));
     FILE *f = fopen(path,"rb");
@@ -127,15 +128,15 @@ int bmp_load(const char *path, bmp_image_t *out_img) {
     
     out_img->width = width;
     out_img->height = height;
-    out_img->bits_per_pixel = ih.biBitCount;
-    out_img->pixels = pixels;
+    out_img->format = PIXEL_FORMAT_RGB;
+    out_img->data = pixels;
+    out_img->data_size = image_size;
 
     return BMP_OK;
 }
 
-int bmp_write(const char *path, const bmp_image_t *img) {
-    if (!path || !img || !img->pixels) return BMP_ERR;
-    if (img->bits_per_pixel != 24) return BMP_ERR;
+int bmp_write(const char *path, const image_t *img) {
+    if (!path || !img || !img->data) return BMP_ERR;
 
     FILE *f = fopen(path, "wb");
     if (!f) return BMP_ERR;
@@ -178,7 +179,7 @@ int bmp_write(const char *path, const bmp_image_t *img) {
 
     for (int row = 0;  row < height ; ++row) {
 	int src_row = height - 1 - row;
-	const uint8_t *src = img->pixels + (size_t)src_row * (size_t)width * 3;
+	const uint8_t *src = img->data + (size_t)src_row * (size_t)width * 3;
 	for (int x = 0; x < width; ++x) {
             uint8_t r = src[3 * x + 0];
             uint8_t g = src[3 * x + 1];
@@ -203,24 +204,3 @@ int bmp_write(const char *path, const bmp_image_t *img) {
     return BMP_OK;
 }
 
-int bmp_invert(bmp_image_t *img) {
-    if (!img || !img->pixels) return BMP_ERR;
-    
-    for (int row = 0; row < img->height; ++row){
-	uint8_t *row_start = img->pixels + (size_t)row * (size_t)img->width * 3;
-	for (int x = 0; x < img->width; ++x) {
-	    row_start[3 * x + 0] = 255 - row_start[3 * x + 0]; //R 
-	    row_start[3 * x + 1] = 255 - row_start[3 * x + 1]; //G
-	    row_start[3 * x + 2] = 255 - row_start[3 * x + 2]; //B
-	}
-    }
-    return BMP_OK;
-}
-
-void bmp_free(bmp_image_t *img) {
-    if (!img) return;
-    free(img->pixels);
-    img->pixels = NULL;
-    img->width = img->height = 0;
-    img->bits_per_pixel = 0;
-}

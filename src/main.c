@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "../include/image-processor.h"
 #include "../include/bmp.h"
 
 int main(int argc, char **argv) {
@@ -10,21 +11,19 @@ int main(int argc, char **argv) {
     const char *in = argv[1];
     const char *out = argv[2];
 
-    bmp_image_t img;
+    image_t img;
     if(bmp_load(in, &img) != 0) {
 	fprintf(stderr, "Failed to load BMP: %s\n",in);
 	return 2;
     }
-    if(bmp_invert(&img) != 0) {
-	fprintf(stderr, "Failed to edit BMP: %s\n",in);
-	return 3;
-    }
+    img_invert(&img);
+
     if(bmp_write(out,&img) != 0) {
 	fprintf(stderr, "Failed to write BMP: %s\n",out);
-	bmp_free(&img);
+	image_free(&img);
 	return 4;
     }
     printf("Copied %dx%d BMP to %s\n", img.width, img.height, out);
-    bmp_free(&img);
+    image_cleanup(&img);
     return 0;
 }
