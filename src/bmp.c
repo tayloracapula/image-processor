@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 
 #pragma pack(push,1)
 typedef struct {
@@ -110,7 +109,7 @@ int bmp_load(const char *path, bmp_image_t *out_img) {
 	    return BMP_ERR;
 	}
 	int bmp_row = top_down ? r : (height - 1 - r);
-	uint8_t *dst = pixels + (size_t)r * (size_t)width * 3;
+	uint8_t *dst = pixels + (size_t)bmp_row * (size_t)width * 3;
 	uint8_t *src_row = rowbuf;
 	for (int x = 0; x < width; ++x) {
 	    uint8_t b = src_row[3 * x + 0];	
@@ -201,6 +200,20 @@ int bmp_write(const char *path, const bmp_image_t *img) {
     }
     free(pad);
     fclose(f);
+    return BMP_OK;
+}
+
+int bmp_invert(bmp_image_t *img) {
+    if (!img || !img->pixels) return BMP_ERR;
+    
+    for (int row = 0; row < img->height; ++row){
+	uint8_t *row_start = img->pixels + (size_t)row * (size_t)img->width * 3;
+	for (int x = 0; x < img->width; ++x) {
+	    row_start[3 * x + 0] = 255 - row_start[3 * x + 0]; //R 
+	    row_start[3 * x + 1] = 255 - row_start[3 * x + 1]; //G
+	    row_start[3 * x + 2] = 255 - row_start[3 * x + 2]; //B
+	}
+    }
     return BMP_OK;
 }
 

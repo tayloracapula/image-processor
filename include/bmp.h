@@ -17,4 +17,6 @@ int bmp_write(const char *path, const bmp_image_t *img);
 
 void bmp_free(bmp_image_t *img);
 
+int bmp_invert(bmp_image_t *img);
+
 #endif
