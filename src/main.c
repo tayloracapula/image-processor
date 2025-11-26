@@ -16,12 +16,22 @@ int main(int argc, char **argv) {
 	fprintf(stderr, "Failed to load BMP: %s\n",in);
 	return 2;
     }
-    img_invert(&img);
+
+    if(img_invert(&img) != 0) {
+	fprintf(stderr,"Failed to invert IMG: %s\n",in);
+	return 3;
+    }
+
+    if(img_rotate(&img, 0) != 0) {
+	fprintf(stderr,"Failed to rotate IMG: %s\n",in);
+	return 4;
+    }
+
 
     if(bmp_write(out,&img) != 0) {
 	fprintf(stderr, "Failed to write BMP: %s\n",out);
 	image_free(&img);
-	return 4;
+	return 5;
     }
     printf("Copied %dx%d BMP to %s\n", img.width, img.height, out);
     image_cleanup(&img);

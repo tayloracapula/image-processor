@@ -7,6 +7,7 @@ typedef enum {
     PIXEL_FORMAT_GREYSCALE, //1 byte per pixel
     PIXEL_FORMAT_RGB, //3 byte per pixel
     PIXEL_FORMAT_RGBA, //4 byte per pixel
+    PIXEL_FORMAT_CMYK, //4 byte per pixel
 } pixel_format_t;
 
 typedef struct {
