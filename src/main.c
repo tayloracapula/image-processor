@@ -27,7 +27,6 @@ int main(int argc, char **argv) {
 	return 4;
     }
 
-
     if(bmp_write(out,&img) != 0) {
 	fprintf(stderr, "Failed to write BMP: %s\n",out);
 	image_free(&img);

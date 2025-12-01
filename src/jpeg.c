@@ -1,53 +1,12 @@
 #include "../include/image-processor.h"
-#include "../include/huff.h"
-
+#include "../include/jpeg-parse.h"
 #include <stdint.h>
 #include <stdio.h>
+
 enum {
     JPEG_ERR = 1,
     JPEG_OK = 0
 };
-
-typedef struct {
-    struct jpeg_component_info {
-	unsigned char HSamplingFactor;
-	unsigned char VSamplingFactor;
-	unsigned char quantizationTableID;
-    }componentInfo[256];
-    unsigned char quantizationTables[4][64];
-    huffnode *huffmanTables[2][4];
-    unsigned short width;
-    unsigned short height;
-    unsigned char precision;
-}jpeg_info;
-
-typedef struct {
-    struct scan_component_info {
-	unsigned char componentID;
-	unsigned char DCHuffmanTableID;
-	unsigned char ACHuffmanTableID;
-    } componentInfo[4];
-    unsigned char maxHSamplingFactor;
-    unsigned char maxVSamplingFactor;
-    unsigned char componentCount;
-}scan_info;
-
-typedef enum SegmentMarker {
-    SOI = 0xFFD8, // Start of Image
-    SOF = 0xFFC0, // Start of Frame
-    DHT = 0xFFC4, // Define Huffman Table
-    DQT = 0xFFDB, // Define Quantisation Table
-    SOS = 0xFFDA, // Start of Scan
-    EOI = 0xFFD9, // End of Image
-    APP0 = 0xFFE0, // Application Data
-} SegmentMarker;
-
-uint16_t read_big_endian_16(FILE *file){
-    uint8_t bytes[2];
-    if (fread(bytes, 1, 2, file) !=2) return 0;
-    return (uint16_t)(bytes[0] << 8) | bytes[1];
-}
-
 
 int jpeg_load(const char *path, image_t *out_img) {
     FILE *file = fopen(path,"rb");
@@ -62,6 +21,44 @@ int jpeg_load(const char *path, image_t *out_img) {
 	switch (marker) {
 	    case SOI:
 		break;
+
+	    case APP0:{
+		uint16_t length = read_big_endian_16(file);
+		fseek(file, length - 2, SEEK_CUR);
+		break;
+	    }
+
+	    case DQT:
+		if (parse_quantization_table(file, &info) != JPEG_OK) {
+		    fclose(file);
+		    return JPEG_ERR;
+		}
+		break;
+	    
+	    case SOF:
+		if (parse_frame_header(file, &info) != JPEG_OK) {
+		    fclose(file);
+		    return JPEG_ERR;
+		} 
+		break;
+
+	    case DHT:
+		if (parse_huffman_table(file, &info) != JPEG_OK) {
+		    fclose(file);
+		    return JPEG_ERR;
+		}
+		break;
+
+	    case SOS:
+		if (parse_scan_header(file, &scan) != JPEG_OK) {
+		    fclose(file);
+		    return JPEG_ERR;
+		}
+		break;
+
+	    case EOI:
+		fclose(file);
+		return JPEG_OK;
 
 	    default:
 		fclose(file);
