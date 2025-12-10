@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include "../include/image-processor.h"
 #include "../include/bmp.h"
 
