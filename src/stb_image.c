@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -21,12 +22,21 @@ int get_stb_channels(pixel_format_t format) {
     }
 }
 
-int image_load_stb(const char *path, image_t *out_img, pixel_format_t format) {
+int image_load_stb(const char *path, image_t *out_img) {
     int width, height, channels;
-    int req_channels = get_stb_channels(format);
 
-    uint8_t *data = stbi_load(path,&width,&height,&channels,req_channels);
+    uint8_t *data = stbi_load(path,&width,&height,&channels,0);
     if (!data) {
+	return IMG_ERR;
+    }
+
+    pixel_format_t format;
+    switch (channels) {
+	case 1: format = PIXEL_FORMAT_GREYSCALE; break;
+	case 3: format = PIXEL_FORMAT_RGB; break;
+	case 4: format = PIXEL_FORMAT_RGBA; break;
+	default:
+	    stbi_image_free(data);
 	return IMG_ERR;
     }
 
@@ -35,7 +45,7 @@ int image_load_stb(const char *path, image_t *out_img, pixel_format_t format) {
     out_img->format = format;
     out_img->data = data;
     out_img->data_size = width * height * get_bytes_per_pixel(format);
-
+    printf("Image Loaded\n");
     return IMG_OK;
 }
 
@@ -43,13 +53,20 @@ int image_save_stb(const char *filename, image_t *img) {
     int result = 0;
     int channels = get_bytes_per_pixel(img->format);
 
-    if (strstr(filename, ".png")) {
+    printf("Saving Image");
 
+    if (strstr(filename, ".png")) {
+	int comp = get_stb_channels(img->format);
+	return stbi_write_png(filename, img->width, img->height, comp, img->data, (img->width * comp)) ? IMG_OK : IMG_ERR;
     }
     if (strstr(filename, ".bmp")) {
-
+	int comp = get_stb_channels(img->format);
+	return stbi_write_bmp(filename, img->width, img->height, comp, img->data) ? IMG_OK : IMG_ERR;
     }
     if (strstr(filename, ".jpg")) {
-
+	int comp = get_stb_channels(img->format);
+	int quality = 85;
+	return stbi_write_jpg(filename, img->width, img->height, comp, img->data, quality) ? IMG_OK : IMG_ERR;
     }
+    return IMG_ERR;
 }

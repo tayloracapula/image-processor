@@ -63,10 +63,8 @@ int jpeg_load(const char *path, image_t *out_img) {
 	    default:
 		fclose(file);
 		return JPEG_ERR;
-
 	}
     }
-
     return JPEG_OK;
 }
 

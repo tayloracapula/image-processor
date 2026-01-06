@@ -38,7 +38,32 @@ int parse_frame_header(FILE *file, jpeg_info *info) {
 }
 
 int parse_quantization_table(FILE *file, jpeg_info *info) {
+    uint16_t length = read_big_endian_16(file);
+    uint16_t bytes_read = 2;
 
+    while (bytes_read < length) {
+	uint8_t qt_info = fgetc(file);
+	bytes_read++;
+
+	uint8_t precision = (qt_info >> 4) & 0x0F;
+	uint8_t table_id = qt_info & 0x0F;
+
+	if (table_id >= 4) return JPEG_ERR;
+	
+	if (precision == 0) {
+	    for (int i = 0; i < 64; i++) {
+		info->quantizationTables[table_id][i] = fgetc(file);
+		bytes_read ++;
+	    }
+	} else if (precision == 1) {
+	    for (int i = 0; i < 64; i++) {
+		info->quantizationTables[table_id][i] = read_big_endian_16(file);
+		bytes_read += 2;
+	    }
+	} else {
+	    return JPEG_ERR;
+	}
+    }
     return JPEG_OK;
 }
 
