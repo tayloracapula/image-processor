@@ -65,7 +65,7 @@ int image_save_stb(const char *filename, image_t *img) {
     }
     if (strstr(filename, ".jpg")) {
 	int comp = get_stb_channels(img->format);
-	int quality = 85;
+	int quality = 95;
 	return stbi_write_jpg(filename, img->width, img->height, comp, img->data, quality) ? IMG_OK : IMG_ERR;
     }
     return IMG_ERR;

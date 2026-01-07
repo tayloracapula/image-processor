@@ -24,5 +24,6 @@ void image_free(image_t *img);
 void image_cleanup(image_t *img);
 int img_invert(image_t *img);
 int img_rotate(image_t *img, int direction);
+int img_blur(image_t *img);
 
 #endif // IMAGE-PROCESSOR_H

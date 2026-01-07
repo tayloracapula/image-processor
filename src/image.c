@@ -1,5 +1,7 @@
 #include "../include/image-processor.h"
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 int get_bytes_per_pixel(pixel_format_t format) {
     switch (format) {
@@ -85,5 +87,59 @@ int img_rotate(image_t *img, int direction) {
     int temp = img->width;
     img->width = img->height;
     img->height = temp;
+    return 0;
+}
+
+int img_blur(image_t *img) {
+    if (!img || !img->data) return 1;
+    
+    int bpp = get_bytes_per_pixel(img->format);
+
+    uint8_t *original = malloc(img->data_size);
+    if (!original) return 1;
+    memcpy(original, img->data, img->data_size);
+
+    int kernel[10][10] = {
+    {1, 1, 2, 2, 3, 3, 2, 2, 1, 1},
+    {1, 2, 3, 4, 5, 5, 4, 3, 2, 1},
+    {2, 3, 5, 6, 8, 8, 6, 5, 3, 2},
+    {2, 4, 6, 8, 10, 10, 8, 6, 4, 2},
+    {3, 5, 8, 10, 12, 12, 10, 8, 5, 3},
+    {3, 5, 8, 10, 12, 12, 10, 8, 5, 3},
+    {2, 4, 6, 8, 10, 10, 8, 6, 4, 2},
+    {2, 3, 5, 6, 8, 8, 6, 5, 3, 2},
+    {1, 2, 3, 4, 5, 5, 4, 3, 2, 1},
+    {1, 1, 2, 2, 3, 3, 2, 2, 1, 1}
+    };
+
+    for (int y = 0; y < img->height; y++) {
+	for (int x = 0; x < img->width; x++) {
+	    for (int c = 0; c < bpp ; c++) {
+		int sum = 0;
+		int weight_sum = 0;
+
+		for (int ky = -5; ky <= 4; ky++) {
+		    for (int kx = -5; kx <= 4 ; kx++) {
+			int pixel_y = y + ky;
+			int pixel_x = x + kx;
+
+			if (pixel_y < 0 || pixel_y >= img->height ||
+			    pixel_x < 0 || pixel_x >= img->width){
+			    continue;
+			}
+
+			uint8_t *pixel = original + (pixel_y * img->width + pixel_x) * bpp + c;
+			int weight = kernel[ky+5][kx+5];
+			sum += (*pixel) * weight;
+			weight_sum += weight;
+		    }
+		}
+
+		uint8_t *dst = img->data + (y * img->width + x) * bpp + c;
+		*dst = weight_sum > 0 ? (sum + weight_sum/2) / weight_sum: 0;
+	    }
+	}
+    }
+    free(original);
     return 0;
 }
