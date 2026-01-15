@@ -1,0 +1,159 @@
+name: C CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc make valgrind imagemagick cppcheck
+    - name: Check Build Tools
+      run: make check
+    - name: Show build configuration
+      run: make config
+    
+    - name: Build Linux version
+      run: make linux
+    
+    - name: Build debug version
+      run: make debug
+    
+    - name: Create test images
+      run: |
+        mkdir -p test_images
+        convert -size 100x100 xc:red test_images/test_input.jpg
+        convert -size 50x50 gradient:blue-yellow test_images/gradient.png
+    
+    - name: Test program execution
+      run: |
+        # Test with your actual binary path
+        ./build/bin/image-processor || echo "Usage printed correctly"
+        
+        # Test all operations
+        ./build/bin/image-processor test_images/test_input.jpg test_images/output_invert.jpg invert
+        ./build/bin/image-processor test_images/test_input.jpg test_images/output_rotate_r.jpg rotate_r
+        ./build/bin/image-processor test_images/test_input.jpg test_images/output_rotate_l.jpg rotate_l
+        ./build/bin/image-processor test_images/gradient.png test_images/output_blur.png blur
+    
+    - name: Verify output files exist
+      run: |
+        for file in test_images/output_*.jpg test_images/output_*.png; do
+          if [ ! -f "$file" ]; then
+            echo "Missing output file: $file"
+            exit 1
+          fi
+          echo "✓ Found: $file"
+        done
+    
+    - name: Memory leak check with Valgrind
+      run: |
+        valgrind --leak-check=full --error-exitcode=1 \
+          ./build/bin/image-processor test_images/test_input.jpg test_images/valgrind_test.jpg invert
+    
+    - name: Static analysis with cppcheck
+      run: |
+        cppcheck --error-exitcode=1 --enable=all --suppress=missingIncludeSystem src/
+    
+    - name: Test different build configurations
+      run: |
+        make clean
+        make OPTIMISATION=3
+        make clean 
+        make STATIC=1
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: build-artifacts
+        path: |
+          build/
+          test_images/
+        retention-days: 7
+
+  cross-compile:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install MinGW for Windows cross-compilation
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-mingw-w64 make
+    
+    - name: Check cross-compilation tools
+      run: make check
+    
+    - name: Build Windows version
+      run: make windows
+    
+    - name: Build both platforms
+      run: |
+        make clean
+        make both
+    
+    - name: Verify binaries were created
+      run: |
+        ls -la build/bin/
+        file build/bin/image-processor*
+
+  multi-compiler:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        optimization: [0, 2, 3]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ${{ matrix.compiler }} make
+    
+    - name: Build with different configurations
+      run: |
+        make CC=${{ matrix.compiler }} OPTIMISATION=${{ matrix.optimization }}
+        
+    - name: Test basic functionality
+      run: |
+        # Quick smoke test if we have imagemagick
+        if command -v convert >/dev/null 2>&1; then
+          convert -size 50x50 xc:blue test.jpg
+          ./build/bin/image-processor test.jpg output.jpg invert
+          [ -f output.jpg ] && echo "✓ Compiler test passed with ${{ matrix.compiler }}"
+        fi
+
+  cleanup-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y build-essential make
+    
+    - name: Test clean targets
+      run: |
+        make linux
+        ls build/
+        make clean
+        # Verify clean worked
+        [ ! -f build/bin/image-processor ] && echo "✓ Clean successful" || exit 1
+        
+    - name: Test rebuild after clean
+      run: |
+        make linux
+        [ -f build/bin/image-processor ] && echo "✓ Rebuild after clean successful"
