@@ -115,3 +115,8 @@ config:
 	@echo "  CFLAGS: $(CFLAGS)"
 	@echo "  INCLUDES: $(INCLUDES)"
 	@echo "  LIBS: $(LIBS)"
+
+.PHONY: clean
+clean:
+	$(Q)rm -rf $(BUILDDIR)
+	@echo "Cleaned build directory" $(BUILDDIR)
