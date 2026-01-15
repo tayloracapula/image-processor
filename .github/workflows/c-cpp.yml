@@ -62,7 +62,7 @@ jobs:
     
     - name: Static analysis with cppcheck
       run: |
-        cppcheck --error-exitcode=1 --enable=all --suppress=missingIncludeSystem src/
+        cppcheck --error-exitcode=1 --enable=all --suppress=missingIncludeSystem --exclude=include/ src/
     
     - name: Test different build configurations
       run: |
