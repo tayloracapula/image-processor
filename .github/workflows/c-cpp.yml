@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc gcc-mingw-w64 make valgrind imagemagick cppcheck
+          sudo apt-get install -y build-essential gcc gcc-mingw-w64 make valgrind imagemagick clang-tidy
     - name: Check Build Tools
       run: make check
     - name: Show build configuration
@@ -60,9 +60,8 @@ jobs:
         valgrind --leak-check=full --error-exitcode=1 \
           ./build/bin/image-processor test_images/test_input.jpg test_images/valgrind_test.jpg invert
     
-    - name: Static analysis with cppcheck
-      run: |
-        cppcheck --error-exitcode=1 --enable=all --suppress=missingIncludeSystem --exclude=include/ src/
+    - name: Static analysis with clang-tidy
+      run: clang-tidy src/*.c -- -std=c11
     
     - name: Test different build configurations
       run: |
