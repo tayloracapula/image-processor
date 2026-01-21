@@ -43,7 +43,7 @@ INCLUDES ?= -I./include
 LIBS ?= -lm
 
 WIN_LDFLAGS := -static
-WIN_LIBS := -lmingw32 -lmsvcrt -lm -lc
+WIN_LIBS := -lmingw32 -lmsvcrt -lm
 
 LINUX_TARGET := $(BINDIR)/$(PROJECT_NAME)
 WINDOWS_TARGET := $(BINDIR)/$(PROJECT_NAME).exe
