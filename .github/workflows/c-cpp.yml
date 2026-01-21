@@ -97,11 +97,6 @@ jobs:
     - name: Build Windows version
       run: make windows
     
-    - name: Build both platforms
-      run: |
-        make clean
-        make both
-    
     - name: Verify binaries were created
       run: |
         ls -la build/bin/

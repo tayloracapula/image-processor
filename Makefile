@@ -88,10 +88,6 @@ $(OBJDIR):
 $(BINDIR):
 	$(Q)mkdir -p $(BINDIR)
 
-# Build both platforms
-.PHONY: both
-both: clean linux windows
-
 
 .PHONY: check
 check:
