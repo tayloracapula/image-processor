@@ -90,7 +90,7 @@ $(BINDIR):
 
 # Build both platforms
 .PHONY: both
-both: linux windows
+both: clean linux windows
 
 
 .PHONY: check
